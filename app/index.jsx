@@ -110,6 +110,18 @@ export default function ProfilePage() {
               ไปยังหน้า About
             </Text>
           </Link>
+          <View style={{ height: 10 }} />
+          <Link href="/books">
+            <Text style={{
+              color: theme.primary,
+              fontSize: 16,
+              fontWeight: 'bold',
+              textDecorationLine: 'underline',
+              textAlign: 'center'
+            }}>
+              ไปยังรายการหนังสือ
+            </Text>
+          </Link>
         </View>
       </ScrollView>
     </SafeAreaView>

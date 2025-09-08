@@ -28,7 +28,7 @@ export default function AboutScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.container}>
-        {/* แก้ให้เป็น 2 บรรทัดและจัดกึ่งกลาง */}
+        
         <Text style={[styles.title, { color: theme.text, textAlign: 'center' }]}>
           Hybrid Mobile Application Programming
         </Text>
