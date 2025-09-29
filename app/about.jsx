@@ -1,11 +1,14 @@
 import React, { useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, Switch, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Switch, ScrollView, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from './context/ThemeContext';
 import { useNavigation } from 'expo-router';
+import { useLocalAuth } from './context/LocalAuthContext';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 export default function AboutScreen() {
   const { isDarkMode, toggleTheme, theme } = useTheme();
+  const { enabled, setEnabled, isSupported, isEnrolled, availableTypes, authenticate } = useLocalAuth();
   const nav = useNavigation();
 
   useLayoutEffect(() => {
@@ -28,6 +31,21 @@ export default function AboutScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.container}>
+        <View style={{ marginBottom: 16, padding: 16, backgroundColor: theme.card, borderRadius: 12 }}>
+          <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>Local Authentication</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <Text style={{ color: theme.subText }}>เปิดใช้งาน</Text>
+            <Switch value={enabled} onValueChange={setEnabled} trackColor={{ false: theme.switchTrack, true: theme.primary }} />
+          </View>
+          <Text style={{ color: theme.subText }}>รองรับอุปกรณ์: {isSupported ? 'ใช่' : 'ไม่รองรับ'}</Text>
+          <Text style={{ color: theme.subText }}>ลงทะเบียนชีวมิติ: {isEnrolled ? 'ใช่' : 'ไม่พบ'}</Text>
+          <Text style={{ color: theme.subText, marginBottom: 8 }}>
+            ประเภทที่รองรับ: {availableTypes?.map((t) => typeName(t)).join(', ') || '-'}
+          </Text>
+          <Pressable onPress={() => authenticate({ promptMessage: 'ทดสอบยืนยันตัวตน' })} style={{ backgroundColor: theme.primary, paddingVertical: 10, borderRadius: 10, alignItems: 'center' }}>
+            <Text style={{ color: '#fff', fontWeight: '600' }}>ทดสอบยืนยันตัวตน</Text>
+          </Pressable>
+        </View>
         
         <Text style={[styles.title, { color: theme.text, textAlign: 'center' }]}>
           Hybrid Mobile Application Programming
@@ -77,3 +95,12 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 });
+
+function typeName(t) {
+  switch (t) {
+    case LocalAuthentication.AuthenticationType.FINGERPRINT: return 'ลายนิ้วมือ';
+    case LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION: return 'ใบหน้า';
+    case LocalAuthentication.AuthenticationType.IRIS: return 'ม่านตา';
+    default: return String(t);
+  }
+}

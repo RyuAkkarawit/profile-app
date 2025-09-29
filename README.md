@@ -4,10 +4,6 @@ A React Native mobile application built with Expo.
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
-- npm or yarn
-- Expo CLI (`npm install -g @expo/cli`)
-- Expo Go app on your mobile device (for testing)
 
 ## Installation
 
@@ -21,6 +17,23 @@ cd profileapp
 ```bash
 npm install
 ```
+
+## Local Authentication (Biometrics / PIN)
+
+This app supports optional local authentication using Expo Local Authentication (Face ID, Touch ID, Android biometrics, or device PIN/Pattern).
+
+How it works:
+- Toggle it on in `About` screen under "Local Authentication".
+- When enabled, the app locks whenever it goes to background, and prompts to unlock on return.
+- You can test with the "ทดสอบยืนยันตัวตน" button in About.
+
+Notes:
+- Requires a physical device or simulator/emulator with enrolled biometrics. If there is no enrollment, the system may fallback to device credentials (PIN/Pattern) or bypass based on platform.
+- Web platform does not support Expo Local Authentication; use native iOS/Android for testing.
+- If prompts do not appear, ensure biometrics are set up on the device and that app permissions are granted.
+
+Packages:
+- `expo-local-authentication` (installed via `npx expo install expo-local-authentication`)
 
 ## Available Commands
 
