@@ -8,7 +8,7 @@ const LAST_UNLOCK_TS_KEY = 'local_auth_last_unlock_ts';
 
 const LocalAuthContext = createContext(null);
 
-// Small helper to persist boolean flags
+
 async function persistBool(key, value) {
   if (value === null || value === undefined) {
     await SecureStore.deleteItemAsync(key);
@@ -29,7 +29,7 @@ async function readBool(key, fallback = false) {
 
 export function LocalAuthProvider({ children }) {
   const [enabled, setEnabled] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(true); // start unlocked until hydration complete
+  const [isUnlocked, setIsUnlocked] = useState(false); 
   const [isSupported, setIsSupported] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [availableTypes, setAvailableTypes] = useState([]);
@@ -50,15 +50,19 @@ export function LocalAuthProvider({ children }) {
         setIsEnrolled(!!enrolled);
         setAvailableTypes(types || []);
         setEnabled(storedEnabled && supported && enrolled);
-        // If enabled, require unlock
-        setIsUnlocked(!(storedEnabled && supported && enrolled));
+        // Require unlock at app launch if device can authenticate; otherwise bypass to login
+        if (supported && enrolled) {
+          setIsUnlocked(false);
+        } else {
+          setIsUnlocked(true);
+        }
       } finally {
         setChecking(false);
       }
     })();
   }, []);
 
-  // Lock when app goes background and local auth is enabled
+  
   useEffect(() => {
     const sub = AppState.addEventListener('change', async (nextState) => {
       const prev = appState.current;
@@ -73,13 +77,10 @@ export function LocalAuthProvider({ children }) {
   }, [enabled]);
 
   const authenticate = async (options = {}) => {
-    if (!enabled) {
-      setIsUnlocked(true);
-      return { success: true, warning: 'Local auth disabled' };
-    }
+    // Always attempt to authenticate when requested; if not possible, unlock and proceed
     if (!isSupported || !isEnrolled) {
       setIsUnlocked(true);
-      return { success: true, warning: 'Device not enrolled; bypassing' };
+      return { success: true, warning: 'Device not enrolled or not supported; bypassing' };
     }
 
     const defaultReason = Platform.select({
@@ -91,8 +92,8 @@ export function LocalAuthProvider({ children }) {
     const res = await LocalAuthentication.authenticateAsync({
       promptMessage: options.promptMessage || defaultReason,
       cancelLabel: options.cancelLabel || 'Cancel',
-      disableDeviceFallback: false,
-      requireConfirmation: false,
+      disableDeviceFallback: options.disableDeviceFallback ?? false,
+      requireConfirmation: options.requireConfirmation ?? false,
     });
 
     if (res.success) {
@@ -107,7 +108,7 @@ export function LocalAuthProvider({ children }) {
     await persistBool(ENABLED_KEY, !!value);
     if (value) {
       setIsUnlocked(false);
-      // optionally prompt immediately
+      
       try { await authenticate({ promptMessage: 'ยืนยันตัวตน (เปิดใช้งาน)' }); } catch {}
     } else {
       setIsUnlocked(true);
@@ -115,15 +116,15 @@ export function LocalAuthProvider({ children }) {
   };
 
   const value = useMemo(() => ({
-    // state
+
     enabled,
     isUnlocked,
     checking,
-    // capabilities
+
     isSupported,
     isEnrolled,
     availableTypes,
-    // actions
+    
     authenticate,
     setEnabled: enableLocalAuth,
   }), [enabled, isUnlocked, checking, isSupported, isEnrolled, availableTypes]);

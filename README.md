@@ -1,144 +1,142 @@
 # Profile App
 
-A React Native mobile application built with Expo.
+A React Native mobile app built with Expo Router, featuring Local Authentication (biometrics / device credentials) and basic auth flow.
 
 ## Prerequisites
 
+- Node.js 18+ (แนะนำ LTS)
+- Android device/emulator หรือ iOS device/simulator
+- Expo Go (ต้องรองรับ SDK 54)
+- แนะนำใช้ตัวจัดการแพ็กเกจตัวเดียว (npm หรือ yarn) เพื่อหลีกเลี่ยงปัญหา lockfile ซ้ำซ้อน
 
 ## Installation
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd profileapp
-```
+1) Clone repo และติดตั้ง dependency
 
-2. Install dependencies:
-```bash
+```powershell
+git clone <repository-url>
+cd profile-app
 npm install
 ```
 
+2) เริ่มต้นพัฒนา
+
+```powershell
+npx expo start
+```
+
+สแกน QR ด้วย Expo Go (Android) หรือกล้อง (iOS) เพื่อเปิดแอป
+
 ## Local Authentication (Biometrics / PIN)
 
-This app supports optional local authentication using Expo Local Authentication (Face ID, Touch ID, Android biometrics, or device PIN/Pattern).
+แอปรองรับการยืนยันตัวตนด้วย Expo Local Authentication (Face ID, Touch ID, Android biometrics หรือ PIN/Pattern ของเครื่อง) โดยมี flow ดังนี้:
 
-How it works:
-- Toggle it on in `About` screen under "Local Authentication".
-- When enabled, the app locks whenever it goes to background, and prompts to unlock on return.
-- You can test with the "ทดสอบยืนยันตัวตน" button in About.
+1) เปิดแอป: ระบบจะให้ “ยืนยันตัวตนก่อน” เสมอ หากอุปกรณ์รองรับและมีการลงทะเบียนชีวมิติไว้
+2) ปลดล็อกสำเร็จ: ถ้ายังไม่เข้าสู่ระบบ จะพาไปหน้า Login ปกติ
+3) Login สำเร็จ: เข้าสู่หน้าหลักของแอป
 
-Notes:
-- Requires a physical device or simulator/emulator with enrolled biometrics. If there is no enrollment, the system may fallback to device credentials (PIN/Pattern) or bypass based on platform.
-- Web platform does not support Expo Local Authentication; use native iOS/Android for testing.
-- If prompts do not appear, ensure biometrics are set up on the device and that app permissions are granted.
+เพิ่มเติมในหน้า About:
+- มีตัวเลือก “Local Authentication” สำหรับควบคุมการ “ล็อกเมื่อส่งแอปไปพื้นหลัง” และปุ่ม “ทดสอบยืนยันตัวตน”
+- หมายเหตุ: การยืนยันก่อนเข้าแอปจะเกิดขึ้นแม้ไม่เปิดสวิตช์ใน About (หากเครื่องรองรับและลงทะเบียนแล้ว)
 
-Packages:
-- `expo-local-authentication` (installed via `npx expo install expo-local-authentication`)
+ข้อควรทราบ:
+- ต้องใช้อุปกรณ์จริงหรือ emulator/simulator ที่ “ลงทะเบียนชีวมิติ” แล้ว (ไม่งั้นอาจ fallback เป็น PIN/Pattern หรือ bypass ตามแพลตฟอร์ม)
+- Web ยังไม่รองรับ Local Authentication ของ Expo
+- หากไม่รองรับหรือไม่ได้ลงทะเบียน ระบบจะ bypass เพื่อไม่บล็อกผู้ใช้ และไปต่อหน้า Login ได้
+
+แพ็กเกจหลักที่ใช้:
+- expo-local-authentication
+- expo-secure-store
 
 ## Available Commands
 
-### Development
+เริ่ม dev server:
 
-Start the development server:
-```bash
+```powershell
 npm start
-# or
-expo start
+# หรือ
+npx expo start
 ```
 
-Start for specific platforms:
-```bash
+เปิดแพลตฟอร์มเฉพาะ:
+
+```powershell
 # Android
 npm run android
-# or
-expo start --android
 
-# iOS
+# iOS (macOS เท่านั้น)
 npm run ios
-# or
-expo start --ios
 
-# Web
+# Web (สำหรับ debug frontend ทั่วไป)
 npm run web
-# or
-expo start --web
 ```
 
-### Building
+## Building
 
-Build for production:
-```bash
-# Build for Android
+ใช้ EAS Build:
+
+```powershell
+# Android
 eas build --platform android
 
-# Build for iOS
+# iOS
 eas build --platform ios
 
-# Build for both platforms
+# ทั้งสองแพลตฟอร์ม
 eas build --platform all
 ```
 
-### Publishing
-
-Publish updates to Expo:
-```bash
-expo publish
-```
-
-## Project Structure
+## Project Structure (ส่วนสำคัญ)
 
 ```
-profileapp/
-├── app/                 # Expo Router app directory
-│   ├── _layout.js      # Root layout component
-│   └── index.jsx       # Home screen
-├── assets/             # Static assets
-│   ├── images/         # Image files
-│   ├── icon.png        # App icon
-│   └── splash-icon.png # Splash screen
-├── app.json           # Expo configuration
-├── package.json       # Dependencies and scripts
-└── eas.json          # EAS Build configuration
+profile-app/
+├─ app/
+│  ├─ _layout.js           # Root layout + navigation guard
+│  ├─ index.jsx            # หน้าแรก
+│  ├─ about.jsx            # ตั้งค่า theme + Local Auth (ทดสอบ/เปิดปิด background lock)
+│  ├─ locked.jsx           # หน้าปลดล็อกด้วย biometrics ก่อนเข้า Login
+│  ├─ auth/
+│  │  ├─ _layout.jsx
+│  │  ├─ login.jsx
+│  │  └─ register.jsx
+│  ├─ books/ ...
+│  └─ context/
+│     ├─ AuthContext.js
+│     ├─ LocalAuthContext.js
+│     ├─ BooksContext.js
+│     └─ ThemeContext.js
+├─ assets/ ...
+├─ app.json
+├─ package.json
+└─ eas.json
 ```
 
-## Technologies Used
+## Technologies / Versions
 
-- **Expo**: ~53.0.13
-- **React**: 19.0.0
-- **React Native**: 0.79.4
-- **Expo Router**: ~5.1.1
-- **React Native Screens**: ~4.11.1
-- **React Native Safe Area Context**: 5.4.0
+- Expo: 54.0.x
+- React: 19.1.0
+- React Native: 0.81.4
+- Expo Router: 6.0.x
+- expo-local-authentication: 17.0.x
+- expo-secure-store: 15.0.x
 
-## Development
+## Troubleshooting
 
-This project uses Expo Router for navigation. The app structure is defined in the `app/` directory following the file-based routing convention.
+- Expo Go SDK mismatch
+	- ถ้าเห็นข้อความ “Project is incompatible with this version of Expo Go (SDK 54 vs 53)” ให้แน่ใจว่าโปรเจ็กต์และ Expo Go อยู่ SDK เดียวกัน (โค้ดนี้อัปเป็น 54 แล้ว)
 
-## Testing
+- มีทั้ง `yarn.lock` และ `package-lock.json`
+	- ให้เลือกใช้เพียงตัวเดียว (แนะนำ npm ⇒ ลบ `yarn.lock`; ถ้าอยากใช้ yarn ⇒ ลบ `package-lock.json`)
 
-1. Install Expo Go on your mobile device
-2. Run `npm start` to start the development server
-3. Scan the QR code with Expo Go (Android) or Camera app (iOS)
-4. The app will load on your device
-
-## Building for Production
-
-This project is configured with EAS Build. To build for production:
-
-1. Install EAS CLI: `npm install -g @expo/eas-cli`
-2. Login to your Expo account: `eas login`
-3. Configure your build: `eas build:configure`
-4. Build your app: `eas build --platform android` or `eas build --platform ios`
+- ไม่เห็น prompt ยืนยันตัวตน
+	- ตรวจสอบว่าเครื่องตั้งค่าชีวมิติแล้ว และให้สิทธิ์การใช้งานเรียบร้อย
 
 ## Configuration
 
-The app configuration is in `app.json` and includes:
-- App name: "profileapp"
-- Version: 1.0.0
-- Bundle identifiers for iOS and Android
-- Splash screen and icon configurations
-- Expo Router plugin
+รายละเอียด config อยู่ใน `app.json` (icon, splash, bundle identifier, plugin ต่างๆ เช่น `expo-router`, `expo-secure-store`)
 
 ## License
 
-[Add your license information here] 
+[Add your license information here]
+
+

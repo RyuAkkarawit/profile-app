@@ -28,8 +28,8 @@ function RootNavigator() {
   // Centralized navigation guard: decide between Locked, Login, or App
   useEffect(() => {
     if (loading || checking) return;
-    // If local auth is enabled and locked, go to locked screen first
-    if (enabled && !isUnlocked) {
+    // If device supports local auth and is locked, go to locked screen first
+    if (!isUnlocked) {
       router.replace('/locked');
       return;
     }
